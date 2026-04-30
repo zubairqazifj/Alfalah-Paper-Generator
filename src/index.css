@@ -1,0 +1,338 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&family=PT+Serif:wght@400;700&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ===============================================================
+   PROFESSIONAL BOARD PAPER STYLES
+   =============================================================== */
+
+.professional-paper {
+  background-color: white !important;
+  color: black !important;
+  width: 210mm;
+  min-height: 297mm; /* A4 height */
+  margin: 0 auto;
+  padding: 20mm;
+  direction: rtl;
+  text-align: right;
+  box-sizing: border-box;
+  position: relative;
+  font-family: var(--font-urdu);
+}
+
+.paper-header-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  border: 2px solid black;
+}
+
+.paper-header-table td {
+  border: 1px solid black;
+  padding: 8px;
+  font-weight: bold;
+  font-size: 14pt;
+}
+
+.paper-title {
+  font-size: 28pt;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.section-divider {
+  background-color: #f0f0f0 !important;
+  border: 1.5px solid black;
+  text-align: center;
+  padding: 10px;
+  margin: 25px 0;
+  font-weight: bold;
+  font-size: 18pt;
+  display: block;
+}
+
+.mcq-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin: 10px 0 25px 0;
+  padding-right: 30px;
+  width: 100%;
+}
+
+.mcq-item {
+  font-size: 13pt;
+  white-space: nowrap;
+}
+
+.question-text {
+  font-size: 15pt;
+  font-weight: bold;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.watermark-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  font-size: 100px;
+  color: rgba(0, 0, 0, 0.03);
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'Jameel Noori Nastaleeq';
+  src: url('/fonts/JameelNooriNastaleeq.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* فونٹ رجسٹر کرنے کا طریقہ */
+@font-face {
+  font-family: 'JameelNoori';
+  src: url('/fonts/JameelNoori.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; /* یہ بہت ضروری ہے تاکہ پیج لوڈ ہوتے ہی اردو غائب نہ ہو */
+}
+
+/* اس کلاس کو وہاں استعمال کریں جہاں اردو لکھنی ہے */
+.urdu-text {
+  font-family: 'JameelNoori', 'Urdu Typesetting', serif !important;
+  direction: rtl; /* اردو کو دائیں سے بائیں کرنے کے لیے */
+  line-height: 1.8; /* نستعلیق کے لیے لائن سپیسنگ زیادہ رکھنی پڑتی ہے */
+}
+
+@theme {
+  --color-alfalah-primary: #006837;
+  --color-alfalah-secondary: #0a2e1f;
+  --color-alfalah-accent: #f1f8f4;
+  --color-alfalah-text: #000000;
+  --color-alfalah-vibrant-green: #22c55e;
+  --color-alfalah-vibrant-blue: #3b82f6;
+  --color-alfalah-vibrant-orange: #f97316;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-urdu: "JameelNoori", "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", "Urdu Typesetting", serif;
+  --font-english: "Times New Roman", "PT Serif", serif;
+}
+
+/* Custom Scrollbar for Chapter Selection */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-alfalah-text antialiased;
+  }
+  
+  .font-urdu {
+    font-family: var(--font-urdu);
+    line-height: 2.5;
+  }
+
+  .font-english {
+    font-family: var(--font-english);
+    line-height: 1.6;
+  }
+}
+
+.glass-card {
+  @apply bg-white/90 backdrop-blur-md border border-white/40 shadow-xl rounded-[2rem] transition-all duration-500;
+}
+
+.sidebar-item {
+  @apply flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 hover:bg-white/10 text-white/60 hover:text-white font-black uppercase tracking-widest text-[10px];
+}
+
+.sidebar-item-active {
+  @apply bg-white/20 text-white shadow-xl shadow-black/10 backdrop-blur-md border border-white/10;
+}
+
+.btn-primary {
+  @apply bg-alfalah-primary text-white px-8 py-4 rounded-2xl font-black transition-all hover:shadow-2xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 uppercase tracking-widest text-sm;
+}
+
+.input-field {
+  @apply w-full px-6 py-4 rounded-2xl border border-slate-100 focus:outline-none focus:ring-8 focus:ring-alfalah-primary/5 focus:border-alfalah-primary/30 transition-all bg-slate-50/50 font-bold text-slate-600 placeholder:text-slate-300 font-urdu text-lg;
+}
+
+.label-urdu {
+  @apply block text-slate-700 font-black mb-3 text-base font-urdu;
+}
+
+.markdown-body {
+  @apply prose prose-slate max-w-none;
+  color: #000000 !important;
+  h1 { @apply text-4xl font-black text-center mb-10 font-urdu tracking-tight; color: #006837 !important; }
+  h2 { 
+    @apply text-2xl font-black mt-10 mb-6 font-urdu text-center; 
+    border: 1px solid #000000 !important; 
+    padding: 8px !important;
+    background-color: #f0f0f0 !important;
+    color: #000000 !important; 
+  }
+  h3 { @apply text-xl font-black mt-8 mb-4 font-urdu text-right; color: #000000 !important; }
+  p { @apply my-4 leading-[2.2] font-urdu text-right text-lg; color: #000000 !important; }
+  ul { @apply list-none pr-6 my-4 space-y-3 text-right; }
+  li { @apply relative pr-8 flex items-start gap-2; }
+  li::before { display: none !important; }
+  ol { @apply list-decimal pr-10 my-4 space-y-3 text-right; }
+  .font-urdu { @apply leading-[2.4] text-lg; }
+}
+
+.legal-paper {
+  font-family: var(--font-urdu);
+  width: 215.9mm; /* Legal Width */
+  margin: auto;
+  direction: rtl;
+  text-align: right;
+  background: white;
+  font-size: 1.1rem;
+}
+
+/* Page break for PDF */
+.page-break {
+  page-break-before: always;
+  margin-top: 20mm;
+}
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  font-size: 80px;
+  color: rgba(0, 0, 0, 0.03);
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-weight: bold;
+}
+
+/* MCQ Options Alignment - Table-like look */
+.mcq-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 20px;
+  padding-right: 30px;
+  width: 100%;
+  direction: rtl;
+}
+
+.mcq-option {
+  display: block;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.colorful-gradient {
+  background: linear-gradient(135deg, #006837 0%, #22c55e 100%);
+}
+
+.stat-card-gradient {
+  background: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,1) 100%);
+}
+
+/* MathJax Styling */
+.mjx-chtml {
+  font-size: 1.2em !important;
+}
+
+@media print {
+  @page { 
+    size: A4; 
+    margin: 15mm; 
+  }
+  
+  body { 
+    background: white !important; 
+    margin: 0 !important; 
+    padding: 0 !important;
+    font-family: 'JameelNoori', 'Jameel Noori Nastaleeq', serif !important;
+  }
+  
+  /* Hide UI elements */
+  .no-print, 
+  aside, 
+  nav, 
+  button, 
+  .sidebar, 
+  .nav-bar, 
+  .download-buttons, 
+  .footer,
+  .mobile-header,
+  .input-area,
+  form { 
+    display: none !important; 
+  }
+  
+  /* Reset layout for print */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  /* Ensure the paper container is visible and full width */
+  .professional-paper,
+  .legal-paper,
+  .paper-container,
+  .markdown-body {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    min-height: auto !important;
+    display: block !important;
+  }
+
+  /* Handle modals during print */
+  .fixed.inset-0 {
+    position: static !important;
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  .max-w-5xl {
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .overflow-hidden, .overflow-y-auto {
+    overflow: visible !important;
+  }
+
+  * { 
+    color: black !important; 
+    -webkit-print-color-adjust: exact !important; 
+    print-color-adjust: exact !important; 
+  }
+}

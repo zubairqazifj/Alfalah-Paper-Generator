@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: teachers
+    // Document ID: userId (uid)
+    // Fields:
+    //   - uid: string (required)
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - role: string (required, admin|teacher)
+    //   - paperQuota: number (required)
+    //   - quotaUsed: number (required)
+    //   - status: string (active|deactive)
+    //   - createdAt: string (date-time)
+    //
+    // Collection: papers
+    // Document ID: paperId
+    // Fields:
+    //   - teacherId: string (required)
+    //   - subject: string (required)
+    //   - content: string (required)
+    //   - createdAt: string
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        ((exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/teachers/$(request.auth.uid)).data.role == 'admin') ||
+         (request.auth.token.email == "mzubairmit@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidTeacher(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'role', 'paperQuota', 'quotaUsed', 'createdAt']) &&
+             data.uid is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string &&
+             data.role in ['admin', 'teacher'] &&
+             data.paperQuota is number &&
+             data.quotaUsed is number &&
+             data.createdAt is string &&
+             (!('status' in data) || data.status in ['active', 'deactive']);
+    }
+
+    function isValidPaper(data) {
+      return data.keys().hasAll(['teacherId', 'subject', 'content', 'createdAt']) &&
+             data.teacherId == request.auth.uid &&
+             data.subject is string && data.subject.size() > 0 &&
+             data.content is string && data.content.size() > 0;
+    }
+
+    function isValidGlobalBook(data) {
+      return data.keys().hasAll(['title', 'subject', 'driveUrl', 'chapters', 'createdAt', 'addedBy']) &&
+             data.title is string && data.title.size() > 0 &&
+             data.subject is string && data.subject.size() > 0 &&
+             data.driveUrl is string && data.driveUrl.size() > 0 &&
+             data.chapters is list &&
+             data.addedBy is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /teachers/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidTeacher(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && isValidTeacher(request.resource.data) && 
+                    (isAdmin() || (isOwner(userId) && 
+                                   request.resource.data.role == resource.data.role &&
+                                   request.resource.data.paperQuota <= resource.data.paperQuota));
+    }
+
+    match /papers/{paperId} {
+      allow read: if isAuthenticated() && (resource.data.teacherId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidPaper(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /library/{bookId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /global_library/{bookId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidGlobalBook(request.resource.data);
+      allow update: if isAdmin() && isValidGlobalBook(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}

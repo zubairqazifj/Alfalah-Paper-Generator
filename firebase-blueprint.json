@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "Teacher": {
+      "title": "Teacher Profile",
+      "description": "User profile for teachers and admins",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID from Firebase Auth" },
+        "name": { "type": "string", "description": "Full name of the teacher" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "role": { "type": "string", "enum": ["admin", "teacher"], "description": "User role" },
+        "totalQuota": { "type": "number", "description": "Total papers allowed" },
+        "quotaUsed": { "type": "number", "description": "Number of papers generated" },
+        "status": { "type": "string", "enum": ["active", "deactive"], "description": "Account status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account creation timestamp" }
+      },
+      "required": ["uid", "name", "email", "role", "totalQuota", "quotaUsed", "createdAt"]
+    },
+    "Paper": {
+      "title": "Examination Paper",
+      "description": "Generated examination paper",
+      "type": "object",
+      "properties": {
+        "teacherId": { "type": "string", "description": "UID of the teacher who created the paper" },
+        "subject": { "type": "string", "description": "Subject of the paper" },
+        "classLevel": { "type": "string", "description": "Class or grade level" },
+        "testType": { "type": "string", "description": "Type of test (e.g. Monthly, Final)" },
+        "content": { "type": "string", "description": "Markdown content of the paper" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["teacherId", "subject", "content", "createdAt"]
+    },
+    "GlobalBook": {
+      "title": "Global Library Book",
+      "description": "Book details and chapters in the global library",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the book" },
+        "subject": { "type": "string", "description": "Subject of the book" },
+        "driveUrl": { "type": "string", "description": "Google Drive link to the PDF" },
+        "chapters": { "type": "array", "items": { "type": "string" }, "description": "List of chapters" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "addedBy": { "type": "string", "description": "Admin who added the book" }
+      },
+      "required": ["title", "subject", "driveUrl", "chapters", "createdAt", "addedBy"]
+    }
+  },
+  "firestore": {
+    "/teachers/{userId}": {
+      "schema": "Teacher",
+      "description": "Collection of teacher profiles"
+    },
+    "/papers/{paperId}": {
+      "schema": "Paper",
+      "description": "Collection of generated papers"
+    },
+    "/global_library/{bookId}": {
+      "schema": "GlobalBook",
+      "description": "Collection of books in the global library"
+    }
+  }
+}
