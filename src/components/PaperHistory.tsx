@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
 import { Paper } from '../types';
@@ -25,6 +25,37 @@ export const PaperHistory: React.FC = () => {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  const handleDeletePaper = async (paperId: string) => {
+    if (!window.confirm('کیا آپ واقعی یہ پیپر ڈیلیٹ کرنا چاہتے ہیں؟')) return;
+    
+    setIsDeleting(paperId);
+    try {
+      await deleteDoc(doc(db, 'papers', paperId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `papers/${paperId}`);
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  const handleDownloadPaper = async (paper: Paper) => {
+    try {
+      await downloadPaperAsTextWord({
+        institution: paper.institution,
+        subject: paper.subject,
+        classLevel: paper.classLevel,
+        testType: paper.testType,
+        totalMarks: paper.marks,
+        totalTime: paper.time,
+        content: paper.content
+      }, `${paper.subject}_AlFalah`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to download Word document');
+    }
+  };
 
   useEffect(() => {
     if (!profile) return;
@@ -119,11 +150,23 @@ export const PaperHistory: React.FC = () => {
                       >
                         <Eye className="w-5 h-5" />
                       </button>
-                      <button className="p-2.5 bg-blue-50 hover:bg-blue-500 hover:text-white rounded-xl text-blue-500 transition-all shadow-sm" title="Download">
+                      <button 
+                        onClick={() => handleDownloadPaper(paper)}
+                        className="p-2.5 bg-blue-50 hover:bg-blue-500 hover:text-white rounded-xl text-blue-500 transition-all shadow-sm" 
+                        title="Download"
+                      >
                         <Download className="w-5 h-5" />
                       </button>
-                      {isAdmin && (
-                        <button className="p-2.5 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl text-red-500 transition-all shadow-sm" title="Delete">
+                      {(isAdmin || paper.teacherId === profile?.uid) && (
+                        <button 
+                          onClick={() => handleDeletePaper(paper.id)}
+                          disabled={isDeleting === paper.id}
+                          className={cn(
+                            "p-2.5 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl text-red-500 transition-all shadow-sm",
+                            isDeleting === paper.id && "opacity-50 cursor-not-allowed"
+                          )}
+                          title="Delete"
+                        >
                           <Trash2 className="w-5 h-5" />
                         </button>
                       )}
@@ -166,11 +209,21 @@ export const PaperHistory: React.FC = () => {
                   >
                     <Eye className="w-4 h-4" />
                   </button>
-                  <button className="p-2 bg-blue-50 text-blue-500 rounded-lg">
+                  <button 
+                    onClick={() => handleDownloadPaper(paper)}
+                    className="p-2 bg-blue-50 text-blue-500 rounded-lg"
+                  >
                     <Download className="w-4 h-4" />
                   </button>
-                  {isAdmin && (
-                    <button className="p-2 bg-red-50 text-red-500 rounded-lg">
+                  {(isAdmin || paper.teacherId === profile?.uid) && (
+                    <button 
+                      onClick={() => handleDeletePaper(paper.id)}
+                      disabled={isDeleting === paper.id}
+                      className={cn(
+                        "p-2 bg-red-50 text-red-500 rounded-lg",
+                        isDeleting === paper.id && "opacity-50"
+                      )}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}

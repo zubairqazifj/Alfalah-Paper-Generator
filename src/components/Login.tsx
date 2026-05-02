@@ -92,16 +92,17 @@ export const Login: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Auth Error:', err);
-      let message = 'لاگ ان کے دوران ایک غیر متوقع خرابی پیش آئی۔';
       const errorCode = err.code || '';
       const errorMessage = err.message || '';
+      
+      let message = 'لاگ ان کے دوران ایک غیر متوقع خرابی پیش آئی۔';
       
       if (errorCode === 'auth/user-not-found' || errorMessage.includes('user-not-found')) {
         message = 'اس ای میل کے ساتھ کوئی اکاؤنٹ نہیں ملا۔ براہ کرم ای میل چیک کریں یا رجسٹریشن کریں۔';
       } else if (errorCode === 'auth/wrong-password' || errorMessage.includes('wrong-password')) {
-        message = 'آپ کا پاس ورڈ غلط ہے۔ براہ کرم دوبارہ کوشش کریں یا "پاس ورڈ بھول گئے" پر کلک کریں۔';
-      } else if (errorCode === 'auth/invalid-credential' || errorMessage.includes('invalid-credential')) {
-        message = 'ای میل یا پاس ورڈ درست نہیں ہے۔ براہ کرم اپنی معلومات چیک کریں۔';
+        message = 'آپ کا پاس ورڈ غلط ہے۔ براہ کرم دوبارہ کوشش کریں یا نیچے "پاس ورڈ بھول گئے" والے لنک پر کلک کریں۔';
+      } else if (errorCode === 'auth/invalid-credential' || errorMessage.includes('invalid-credential') || errorMessage.includes('invalid-login-credentials')) {
+        message = 'ای میل یا پاس ورڈ درست نہیں ہے۔ براہ کرم اپنی معلومات چیک کریں یا پاس ورڈ ری سیٹ کریں۔';
       } else if (errorCode === 'auth/email-already-in-use' || errorMessage.includes('email-already-in-use')) {
         message = 'یہ ای میل پہلے سے زیر استعمال ہے۔ براہ کرم لاگ ان کریں۔';
       } else if (errorCode === 'auth/weak-password' || errorMessage.includes('weak-password')) {
@@ -109,9 +110,10 @@ export const Login: React.FC = () => {
       } else if (errorCode === 'auth/invalid-email' || errorMessage.includes('invalid-email')) {
         message = 'ای میل کا فارمیٹ درست نہیں ہے۔';
       } else if (errorCode === 'auth/too-many-requests' || errorMessage.includes('too-many-requests')) {
-        message = 'بہت زیادہ ناکام کوششیں کی گئیں۔ آپ کا اکاؤنٹ عارضی طور پر بلاک کر دیا گیا ہے۔ براہ کرم تھوڑی دیر بعد کوشش کریں۔';
+        message = 'بہت زیادہ ناکام کوششیں کی گئیں۔ سیکیورٹی وجوہات کی بنا پر آپ کا اکاؤنٹ عارضی طور پر بلاک کر دیا گیا ہے۔ براہ کرم تھوڑی دیر بعد کوشش کریں۔';
       } else if (errorMessage) {
-        message = errorMessage;
+        // Only use the technical error if we don't have a better Urdu one
+        message = `ایرر: ${errorMessage}`;
       }
       
       setError(message);
@@ -144,7 +146,7 @@ export const Login: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-red-50 border border-red-100 text-red-500 p-4 rounded-2xl mb-6 text-sm font-bold"
+            className="bg-red-50 border border-red-100 text-red-500 p-4 rounded-2xl mb-6 text-sm font-bold urdu-text leading-relaxed shadow-sm"
           >
             {error}
           </motion.div>
