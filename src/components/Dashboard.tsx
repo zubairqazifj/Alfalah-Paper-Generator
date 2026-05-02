@@ -29,13 +29,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
   const [classCount, setClassCount] = useState(0);
 
   useEffect(() => {
-    // Using static data counts
-    const uniqueClasses = new Set(allBooks.map(b => `${b.level}-${b.class}`));
-    setBookCount(allBooks.length);
-    setClassCount(uniqueClasses.size);
-  }, []);
-
-  useEffect(() => {
     if (!profile) return;
 
     const q = query(
@@ -53,7 +46,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     });
 
     const unsubscribeBooks = onSnapshot(collection(db, 'library'), (snapshot) => {
-      setBookCount(snapshot.size);
+      const libraryBooks = snapshot.docs.map(doc => doc.data() as Book);
+      
+      const allAccessibleBooks = [
+        ...allBooks.map(b => ({
+          level: b.level,
+          classLevel: b.class,
+          subject: b.subject
+        } as unknown as Book)),
+        ...libraryBooks
+      ];
+
+      setBookCount(allAccessibleBooks.length);
+      const uniqueClasses = new Set(allAccessibleBooks.map(b => `${b.level}-${b.classLevel}`));
+      setClassCount(uniqueClasses.size);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'library');
     });

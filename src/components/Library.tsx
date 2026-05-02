@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, addDoc, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
@@ -12,6 +12,8 @@ import {
   FileText,
   Search
 } from 'lucide-react';
+
+import { allBooks } from '../data/bookData';
 
 export const Library: React.FC = () => {
   const { user } = useAuth();
@@ -38,6 +40,19 @@ export const Library: React.FC = () => {
     return () => unsubscribe();
   }, [user]);
 
+  const allDisplayBooks = useMemo(() => {
+    const staticBooks = allBooks.map(b => ({
+      id: `static-${b.subject}-${b.class}`,
+      title: b.subject,
+      level: b.level,
+      classLevel: b.class,
+      subject: b.subject,
+      isSystem: true
+    } as unknown as Book));
+    
+    return [...staticBooks, ...books];
+  }, [books]);
+
   const handleAddBook = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -56,7 +71,7 @@ export const Library: React.FC = () => {
     }
   };
 
-  const filteredBooks = books.filter(b => 
+  const filteredBooks = allDisplayBooks.filter(b => 
     b.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     b.subject.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -103,12 +118,17 @@ export const Library: React.FC = () => {
                   <div className="p-4 bg-alfalah-primary/10 rounded-2xl group-hover:scale-110 transition-transform">
                     <BookOpen className="w-8 h-8 text-alfalah-primary" />
                   </div>
-                  <button 
-                    onClick={() => deleteDoc(doc(db, 'library', book.id))}
-                    className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  {!(book as any).isSystem && (
+                    <button 
+                      onClick={() => deleteDoc(doc(db, 'library', book.id))}
+                      className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
+                  {(book as any).isSystem && (
+                    <span className="text-[10px] font-black bg-orange-100 text-orange-600 px-2 py-1 rounded-lg uppercase tracking-tighter">System</span>
+                  )}
                 </div>
                 <h3 className="font-black text-xl text-slate-900 mb-3 text-right font-urdu line-clamp-1">{book.title}</h3>
                 <div className="flex flex-wrap gap-2 mb-6 justify-end">

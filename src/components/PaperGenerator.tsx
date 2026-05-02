@@ -119,14 +119,25 @@ export const PaperGenerator: React.FC = () => {
   const watchTotalMarks = watch('totalMarks');
   const watchTotalTime = watch('totalTime');
 
-  // Using Static Data
-  const levels = useMemo(() => [...new Set(allBooks.map(b => b.level))], []);
+  const allMergedBooks = useMemo(() => {
+    const staticMerged = allBooks.map(b => ({
+      level: b.level,
+      classLevel: b.class,
+      subject: b.subject,
+      id: `static-${b.subject}-${b.class}`
+    } as unknown as BookType));
+    
+    return [...staticMerged, ...books];
+  }, [books]);
+
+  // Using Merged Data
+  const levels = useMemo(() => [...new Set(allMergedBooks.map(b => b.level))], [allMergedBooks]);
   const classes = useMemo(() => {
-    return [...new Set(allBooks.filter(b => b.level === watchLevel).map(b => b.class))];
-  }, [watchLevel]);
+    return [...new Set(allMergedBooks.filter(b => b.level === watchLevel).map(b => b.classLevel))];
+  }, [watchLevel, allMergedBooks]);
   const subjects = useMemo(() => {
-    return allBooks.filter(b => b.level === watchLevel && b.class === watchClass);
-  }, [watchLevel, watchClass]);
+    return allMergedBooks.filter(b => b.level === watchLevel && b.classLevel === watchClass);
+  }, [watchLevel, watchClass, allMergedBooks]);
 
   // Trigger MathJax re-render
   useEffect(() => {
