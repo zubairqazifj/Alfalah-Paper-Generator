@@ -105,9 +105,9 @@ export const PaperHistory: React.FC = () => {
 
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden no-print">
         {/* Desktop Table View */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-right">
-            <thead className="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black tracking-widest">
+        <div className="hidden md:block overflow-x-auto max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin">
+          <table className="w-full text-right border-collapse">
+            <thead className="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black tracking-widest sticky top-0 z-10 backdrop-blur-sm shadow-sm">
               <tr className="flex-row-reverse">
                 <th className="px-8 py-5 font-urdu text-lg">مضمون</th>
                 <th className="px-8 py-5 font-urdu text-lg">عنوان</th>

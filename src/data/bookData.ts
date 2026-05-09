@@ -3,16 +3,17 @@ export interface BookData {
   class: string;
   subject: string;
   link: string;
+  board?: string;
 }
 
 export const allBooks: BookData[] = [
   // Primary
-  { level: "Primary", class: "Class_01", subject: "Urdu_Class_1.pdf", link: "https://drive.google.com/file/d/1VBLo-zy0oBaRUNfljG6vHrwSaG1RWQdS/view?usp=drivesdk" },
-  { level: "Primary", class: "Class_01", subject: "Math_Class_1.pdf", link: "https://drive.google.com/file/d/1BXLNkAZirWtFGZOnj6Nz3LbUfTiJg84A/view?usp=drivesdk" },
-  { level: "Primary", class: "Class_01", subject: "English_Class_1.pdf", link: "https://drive.google.com/file/d/14J2da-4GYOQe8ZWxmlRdsXCj7nyPsOq0/view?usp=drivesdk" },
-  { level: "Primary", class: "Class_01", subject: "Islamiat_Class_1.pdf", link: "https://drive.google.com/file/d/150mi-Vu8PPB2t2CkrVg_3SCaygOohMXm/view?usp=drivesdk" },
-  { level: "Primary", class: "Class_01", subject: "General_Knowledge_Class_1.pdf", link: "https://drive.google.com/file/d/1A8C0RRA-6p8iXWlxc4LCDPuKhqTIx3wg/view?usp=drivesdk" },
-  { level: "Primary", class: "Class_01", subject: "Tajwedi_Qaida_Class_1.pdf", link: "https://drive.google.com/file/d/1ACwE4KOk3Lz3PMwrnhVN8zts7m2e2So4/view?usp=drivesdk" },
+  { level: "Primary", class: "Class_01", subject: "Urdu_Class_1.pdf", link: "https://drive.google.com/file/d/1VBLo-zy0oBaRUNfljG6vHrwSaG1RWQdS/view?usp=drivesdk", board: "Federal" },
+  { level: "Primary", class: "Class_01", subject: "Math_Class_1.pdf", link: "https://drive.google.com/file/d/1BXLNkAZirWtFGZOnj6Nz3LbUfTiJg84A/view?usp=drivesdk", board: "Federal" },
+  { level: "Primary", class: "Class_01", subject: "English_Class_1.pdf", link: "https://drive.google.com/file/d/14J2da-4GYOQe8ZWxmlRdsXCj7nyPsOq0/view?usp=drivesdk", board: "Federal" },
+  { level: "Primary", class: "Class_01", subject: "Islamiat_Class_1.pdf", link: "https://drive.google.com/file/d/150mi-Vu8PPB2t2CkrVg_3SCaygOohMXm/view?usp=drivesdk", board: "Federal" },
+  { level: "Primary", class: "Class_01", subject: "General_Knowledge_Class_1.pdf", link: "https://drive.google.com/file/d/1A8C0RRA-6p8iXWlxc4LCDPuKhqTIx3wg/view?usp=drivesdk", board: "Federal" },
+  { level: "Primary", class: "Class_01", subject: "Tajwedi_Qaida_Class_1.pdf", link: "https://drive.google.com/file/d/1ACwE4KOk3Lz3PMwrnhVN8zts7m2e2So4/view?usp=drivesdk", board: "Federal" },
   
   { level: "Primary", class: "Class_02", subject: "English_Class_2.pdf", link: "https://drive.google.com/file/d/1wACbis_wytqKyWbfI1UbH96qWBZhVA-v/view?usp=drivesdk" },
   { level: "Primary", class: "Class_02", subject: "Math_Class_2.pdf", link: "https://drive.google.com/file/d/14D3m1qb_7JF5QrRFy1HITSyWMQWEqpG1/view?usp=drivesdk" },

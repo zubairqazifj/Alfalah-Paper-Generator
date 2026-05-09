@@ -15,6 +15,8 @@ export interface Book {
   level: string;
   classLevel: string;
   subject: string;
+  board?: string;
+  content?: string;
   fileUrl?: string;
   chapters?: string[];
   createdAt?: string;

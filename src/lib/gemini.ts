@@ -72,6 +72,13 @@ export async function generatePaper(params: PaperGenerationParams): Promise<stri
 
     CRITICAL INSTRUCTION: ONLY provide the paper content. DO NOT include any introductory remarks, notes, or extra text. 
     DO NOT include the institution name, subject, class, marks, or time in your output. 
+    
+    STRICT CONTENT GUARANTEE:
+    - You MUST ONLY generate questions from the specified chapters or topics mentioned in the "Content Source" or "Specific Topic".
+    - If specific chapters are provided (e.g., "Chapter 1, Chapter 2"), DO NOT include information or questions from other parts of the book/subject.
+    - If the user provides manual topics, stick strictly to those topics.
+    - If "Full Book" is requested, distribute questions across the entire curriculum.
+    
     Start directly with "### Section A: Multiple Choice Questions (MCQs)".
 
     Output Format (Markdown):

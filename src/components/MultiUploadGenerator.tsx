@@ -12,7 +12,8 @@ import {
   X,
   FileUp,
   FileDown,
-  CheckCircle2
+  CheckCircle2,
+  BookOpen
 } from 'lucide-react';
 import { generatePaper, PaperGenerationParams } from '../lib/gemini';
 import { useAuth } from '../lib/AuthContext';
@@ -72,8 +73,45 @@ export const MultiUploadGenerator: React.FC = () => {
   const watchTotalTime = watch('totalTime');
 
   const paperRef = useRef<HTMLDivElement>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Chapter Selection State
+  const [chapters, setChapters] = useState<string[]>([]);
+  const [selectedChapters, setSelectedChapters] = useState<string[]>(['مکمل کتاب']);
+  const [unitInput, setUnitInput] = useState('');
+
+  const addManualUnit = () => {
+    if (unitInput.trim()) {
+      const unit = unitInput.trim();
+      setSelectedChapters(prev => {
+        const filtered = prev.filter(c => c !== "مکمل کتاب");
+        if (filtered.includes(unit)) return filtered;
+        return [...filtered, unit];
+      });
+      setUnitInput('');
+    }
+  };
+
+  const removeChapter = (chapter: string) => {
+    setSelectedChapters(prev => {
+      const filtered = prev.filter(c => c !== chapter);
+      return filtered.length === 0 ? ["مکمل کتاب"] : filtered;
+    });
+  };
+
+  const handleChapterChange = (chapter: string) => {
+    if (chapter === "مکمل کتاب") {
+      setSelectedChapters(["مکمل کتاب"]);
+    } else {
+      let updated = selectedChapters.filter(c => c !== "مکمل کتاب");
+      if (updated.includes(chapter)) {
+        updated = updated.filter(c => c !== chapter);
+      } else {
+        updated.push(chapter);
+      }
+      setSelectedChapters(updated.length === 0 ? ["مکمل کتاب"] : updated);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -160,9 +198,13 @@ export const MultiUploadGenerator: React.FC = () => {
     try {
       console.log('Starting paper generation with files:', uploadedFiles.length);
       
+      const chapterContext = selectedChapters.includes('مکمل کتاب') 
+        ? "تمام اپ لوڈ کردہ فائلیں (All uploaded files)" 
+        : `صرف ان ابواب یا ٹاپکس (Chapters/Topics) سے سوالات تیار کریں: ${selectedChapters.join(', ')}`;
+
       const params: PaperGenerationParams = {
         ...data,
-        contentSource: 'Multi Upload',
+        contentSource: chapterContext,
         files: uploadedFiles.map(f => ({ data: f.data, mimeType: f.mimeType }))
       };
 
@@ -269,13 +311,14 @@ export const MultiUploadGenerator: React.FC = () => {
   const isUrduLanguage = language === 'Urdu' || language === 'Bilingual';
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 lg:h-[calc(100vh-120px)] flex-row-reverse">
-      <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-y-auto p-6 lg:p-10 relative no-print" dir="rtl">
+    <div className="flex flex-col gap-8 lg:gap-10">
+      <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-xl p-6 lg:p-10 relative no-print" dir="rtl">
         <div className="absolute top-0 left-0 w-40 h-40 bg-alfalah-primary/5 rounded-full -ml-20 -mt-20" />
         
         <div className="text-center mb-10 relative">
-          <h1 className="text-[#1e3a8a] text-3xl font-black font-urdu">ملٹی اپلوڈ پیپر جنریٹر</h1>
-          <p className="text-gray-500 mt-2 text-sm font-urdu">اپنی فائلیں اپ لوڈ کریں اور ان کی بنیاد پر پیپر تیار کریں۔</p>
+          <h1 className="text-[#1e3a8a] text-4xl font-black font-urdu tracking-tight">ملٹی اپلوڈ پیپر جنریٹر</h1>
+          <div className="h-1.5 w-24 bg-alfalah-primary/20 mx-auto mt-4 rounded-full" />
+          <p className="text-slate-500 mt-4 text-lg font-urdu">اپنی فائلیں اپ لوڈ کریں اور ان کی بنیاد پر پیپر تیار کریں۔</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 relative">
@@ -349,6 +392,93 @@ export const MultiUploadGenerator: React.FC = () => {
             </div>
 
             <div className="col-span-full border-t pt-6">
+              <label className="label-urdu text-xl mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-green-600" />
+                کن ابواب یا ٹاپکس سے پیپر بنانا ہے؟
+              </label>
+              
+              <div className="bg-slate-50/50 p-6 rounded-3xl border border-dashed border-green-400">
+                <label className="label-urdu text-base font-bold mb-3 block text-right">عنوانات یا اسباق شامل کریں</label>
+                
+                <div className="flex gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={addManualUnit}
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-2 font-urdu font-bold whitespace-nowrap"
+                  >
+                    شامل کریں +
+                  </button>
+                  <input 
+                    type="text"
+                    value={unitInput}
+                    onChange={(e) => setUnitInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addManualUnit();
+                      }
+                    }}
+                    placeholder="باب یا ٹاپک کا نام لکھیں (مثلاً: تحریکِ پاکستان)"
+                    className="input-field py-2.5 text-sm text-right flex-1"
+                  />
+                </div>
+
+                <div className="flex justify-start mb-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleChapterChange('مکمل کتاب')}
+                    className={cn(
+                      "px-6 py-2 rounded-xl text-sm font-urdu font-bold transition-all border shadow-sm",
+                      selectedChapters.includes('مکمل کتاب')
+                        ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200"
+                        : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50"
+                    )}
+                  >
+                    مکمل کتاب (اپ لوڈ کردہ تمام مواد)
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-200">
+                  <p className="w-full text-right text-xs font-bold text-slate-400 mb-2 font-urdu">منتخب شدہ ٹاپکس:</p>
+                  <AnimatePresence>
+                    {selectedChapters.map(chapter => (
+                      <motion.span 
+                        layout
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        key={chapter} 
+                        className={cn(
+                          "group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-urdu border shadow-[0_2px_8px_-3px_rgba(0,0,0,0.1)] transition-all hover:shadow-md",
+                          chapter === 'مکمل کتاب' 
+                            ? "bg-blue-600 border-blue-500 text-white" 
+                            : "bg-white border-green-200 text-green-800 hover:border-green-400"
+                        )}
+                      >
+                        {chapter}
+                        {chapter !== 'مکمل کتاب' && (
+                          <button 
+                            type="button" 
+                            onClick={() => removeChapter(chapter)}
+                            className="bg-green-100 group-hover:bg-green-200 text-green-800 rounded-full p-1 transition-colors"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        )}
+                        {chapter === 'مکمل کتاب' && (
+                          <div className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
+                        )}
+                      </motion.span>
+                    ))}
+                  </AnimatePresence>
+                  {selectedChapters.length === 0 && (
+                    <span className="text-slate-400 text-sm font-urdu">کوئی باب منتخب نہیں کیا گیا۔</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-span-full border-t pt-6">
               <label className="label-urdu text-xl mb-4">فائلیں اپ لوڈ کریں</label>
               <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center hover:border-alfalah-primary/40 transition-all cursor-pointer relative group bg-slate-50/50 z-0">
                 <input 
@@ -414,22 +544,25 @@ export const MultiUploadGenerator: React.FC = () => {
         </form>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-row-reverse no-print">
-          <div className="flex items-center gap-3 flex-row-reverse">
-            <div className="w-10 h-10 bg-alfalah-primary/10 rounded-xl flex items-center justify-center text-alfalah-primary">
-              <FileText className="w-6 h-6" />
+      <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-xl flex flex-col overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center bg-slate-50/50 flex-row-reverse no-print gap-6">
+          <div className="flex items-center gap-4 flex-row-reverse">
+            <div className="w-12 h-12 bg-alfalah-primary/10 rounded-2xl flex items-center justify-center text-alfalah-primary shadow-inner">
+              <FileText className="w-7 h-7" />
             </div>
-            <span className="font-black text-xl text-slate-900 font-urdu">پیپر کا پیش نظارہ</span>
+            <div>
+              <h2 className="font-black text-2xl text-slate-900 font-urdu leading-tight">پیپر کا پیش نظارہ</h2>
+              <p className="text-slate-400 text-sm font-medium">تیار کردہ پیپر یہاں دیکھیں</p>
+            </div>
           </div>
           {generatedContent && (
-            <div className="flex gap-3 no-print download-buttons">
+            <div className="flex flex-wrap gap-3 no-print download-buttons w-full sm:w-auto">
               <button 
                 onClick={downloadWord}
-                className="flex-1 p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 font-bold" 
+                className="flex-1 sm:flex-none px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 font-bold group" 
                 title="Download Word"
               >
-                <FileDown className="w-6 h-6" />
+                <FileDown className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 <span className="font-urdu">ڈاؤن لوڈ Word</span>
               </button>
               <button 
@@ -437,17 +570,17 @@ export const MultiUploadGenerator: React.FC = () => {
                   window.focus();
                   window.print();
                 }}
-                className="flex-1 p-4 bg-green-700 hover:bg-green-800 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 font-bold" 
+                className="flex-1 sm:flex-none px-6 py-4 bg-green-700 hover:bg-green-800 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 font-bold group" 
                 title="Print Directly"
               >
-                <Printer className="w-6 h-6" />
+                <Printer className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 <span className="font-urdu">براہِ راست پرنٹ</span>
               </button>
             </div>
           )}
         </div>
 
-        <div className="flex-1 overflow-auto p-4 md:p-10 bg-slate-100/50">
+        <div className="flex-1 overflow-auto p-4 md:p-12 bg-slate-100/50 min-h-[600px] flex justify-center">
           <AnimatePresence mode="wait">
             {generatedContent ? (
               <motion.div
@@ -461,9 +594,14 @@ export const MultiUploadGenerator: React.FC = () => {
                   id="paper-content" 
                   ref={paperRef} 
                   className={cn(
-                    "professional-paper p-8",
+                    "professional-paper p-12",
                     isUrduLanguage ? "text-right" : "text-left"
                   )}
+                  style={{ 
+                    fontFamily: 'Jameel Noori Nastaleeq, Urdu Typesetting, serif',
+                    backgroundColor: 'white',
+                    color: 'black'
+                  }}
                   dir={isUrduLanguage ? "rtl" : "ltr"}
                 >
                   {/* Watermark */}

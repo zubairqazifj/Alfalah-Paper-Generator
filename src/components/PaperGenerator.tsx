@@ -33,7 +33,8 @@ import html2canvas from 'html2canvas';
 import html2pdf from 'html2pdf.js';
 import { downloadPaperAsTextWord } from '../lib/wordGenerator';
 import { cn, formatClass } from '../lib/utils';
-import { extractChaptersContent } from '../lib/pdfUtils';
+import { extractChaptersContent, extractFullTextFromUrl } from '../lib/pdfUtils';
+import { extractChaptersFromText } from '../lib/gemini';
 
 const paperSchema = z.object({
   institution: z.string().min(3, 'Institution name is too short'),
@@ -57,6 +58,51 @@ export const PaperGenerator: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [books, setBooks] = useState<BookType[]>([]);
   const [selectedBook, setSelectedBook] = useState<BookType | null>(null);
+  const [isExtractingChapters, setIsExtractingChapters] = useState(false);
+
+  const loadLessonsFromPDF = async () => {
+    if (!watchSubject || !watchLevel || !watchClass) {
+      alert("براہ کرم پہلے لیول، کلاس اور مضمون منتخب کریں۔");
+      return;
+    }
+
+    const currentBook = allMergedBooks.find(b => 
+      b.level === watchLevel && 
+      b.classLevel === watchClass && 
+      b.subject === watchSubject
+    );
+
+    const bookUrl = currentBook?.id.startsWith('static-') 
+      ? allBooks.find(b => b.subject === watchSubject && b.class === watchClass)?.link
+      : (currentBook as any)?.fileUrl;
+
+    if (!bookUrl) {
+      alert("اس کتاب کی فائل دستیاب نہیں ہے۔");
+      return;
+    }
+
+    setIsExtractingChapters(true);
+    try {
+      const rawText = await extractFullTextFromUrl(bookUrl);
+      
+      // Use Gemini to extract chapter names from the text
+      const extractedChapters = await extractChaptersFromText(rawText.substring(0, 15000));
+      
+      if (extractedChapters && extractedChapters.length > 0) {
+        setChapters(prev => [...new Set([...prev, ...extractedChapters])]);
+        alert("اسباق کامیابی سے لوڈ ہو گئے ہیں۔ اب آپ ان کو منتخب کر سکتے ہیں۔");
+      } else {
+        alert("اسباق کی فہرست نہیں مل سکی۔ آپ مینوئل بھی لکھ سکتے ہیں۔");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("پی ڈی ایف سے اسباق نکالنے میں مسئلہ ہوا ہے۔");
+    } finally {
+      setIsExtractingChapters(false);
+    }
+  };
+
+  const [chapters, setChapters] = useState<string[]>([]);
   const [selectedChapters, setSelectedChapters] = useState<string[]>(['مکمل کتاب']);
   const [unitInput, setUnitInput] = useState('');
   const paperRef = useRef<HTMLDivElement>(null);
@@ -299,13 +345,14 @@ export const PaperGenerator: React.FC = () => {
   const isUrduLanguage = language === 'Urdu' || language === 'Bilingual';
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 lg:h-[calc(100vh-120px)] flex-row-reverse">
-      <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-y-auto p-6 lg:p-10 relative no-print" dir="rtl">
+    <div className="flex flex-col gap-8 lg:gap-10">
+      <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm p-6 lg:p-10 relative no-print shadow-xl" dir="rtl">
         <div className="absolute top-0 left-0 w-40 h-40 bg-alfalah-primary/5 rounded-full -ml-20 -mt-20" />
         
         <div className="text-center mb-10 relative">
-          <h1 className="text-[#1e3a8a] text-4xl font-black font-urdu">الفلاح پیپر جنریٹر</h1>
-          <p className="text-gray-500 mt-2 text-lg font-urdu">کتاب منتخب کریں اور مخصوص چیپٹرز سے پیپر تیار کریں۔</p>
+          <h1 className="text-[#1e3a8a] text-5xl font-black font-urdu tracking-tight">الفلاح پیپر جنریٹر</h1>
+          <div className="h-1.5 w-24 bg-alfalah-primary/20 mx-auto mt-4 rounded-full" />
+          <p className="text-slate-500 mt-4 text-lg font-urdu">کتاب منتخب کریں اور مخصوص چیپٹرز سے پیپر تیار کریں۔</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 relative">
@@ -344,43 +391,45 @@ export const PaperGenerator: React.FC = () => {
                    <BookOpen className="w-5 h-5 text-green-600" />
                    کن ابواب سے پیپر بنانا ہے؟
                  </label>
-                 <button 
-                  type="button"
-                  className="bg-green-50 text-green-700 px-3 py-1 rounded-lg text-sm font-urdu hover:bg-green-100 transition-colors flex items-center gap-1"
-                 >
-                   <Upload className="w-3 h-3" />
-                   اسباق لوڈ کریں
-                 </button>
+                  <button 
+                    type="button"
+                    onClick={loadLessonsFromPDF}
+                    disabled={isExtractingChapters}
+                    className="bg-green-50 text-green-700 px-3 py-1 rounded-lg text-sm font-urdu hover:bg-green-100 transition-colors flex items-center gap-1 disabled:opacity-50"
+                  >
+                    {isExtractingChapters ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                    {isExtractingChapters ? 'لوڈ ہو رہے ہیں...' : 'اسباق لوڈ کریں'}
+                  </button>
               </div>
               
-              <div className="bg-slate-50/50 p-5 rounded-3xl border border-slate-100">
-                {/* Manual Input and Full Book Toggle */}
-                <div className="mb-4 flex flex-wrap gap-2">
-                  <div className="relative flex-1 min-w-[200px]">
-                    <input 
-                      type="text"
-                      value={unitInput}
-                      onChange={(e) => setUnitInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addManualUnit();
-                        }
-                      }}
-                      placeholder="باب یا یونٹ کا نام لکھیں (مثلاً: تحریکِ پاکستان)"
-                      className="input-field py-2 text-sm pr-10"
-                    />
-                    <PlusCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                  </div>
+              <div className="bg-slate-50/50 p-6 rounded-3xl border border-dashed border-green-400">
+                <label className="label-urdu text-base font-bold mb-3 block text-right">کن ابواب سے پیپر بنانا ہے؟</label>
+                
+                {/* Manual Input and Add Button */}
+                <div className="flex gap-2 mb-4">
                   <button
                     type="button"
                     onClick={addManualUnit}
-                    className="bg-[#10b981] hover:bg-emerald-600 text-white px-5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-2 font-urdu"
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-2 font-urdu font-bold whitespace-nowrap"
                   >
-                    <span>شامل کریں</span>
-                    <PlusCircle className="w-4 h-4" />
+                    شامل کریں +
                   </button>
+                  <input 
+                    type="text"
+                    value={unitInput}
+                    onChange={(e) => setUnitInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addManualUnit();
+                      }
+                    }}
+                    placeholder="باب یا یونٹ کا نام لکھیں (مثلاً: تحریکِ پاکستان)"
+                    className="input-field py-2.5 text-sm text-right flex-1"
+                  />
+                </div>
 
+                <div className="flex justify-start mb-4 gap-2">
                   <button
                     type="button"
                     onClick={() => handleChapterChange('مکمل کتاب')}
@@ -395,30 +444,64 @@ export const PaperGenerator: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Selected Chapters Tags */}
-                <div className="flex flex-wrap gap-2 min-h-[40px]">
-                  {selectedChapters.map(chapter => (
-                    <span 
-                      key={chapter} 
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-urdu border shadow-sm transition-all",
-                        chapter === 'مکمل کتاب' 
-                          ? "bg-blue-50 border-blue-100 text-blue-700" 
-                          : "bg-green-50 border-green-100 text-green-700"
-                      )}
-                    >
-                      {chapter}
-                      {chapter !== 'مکمل کتاب' && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeChapter(chapter)}
-                          className="hover:bg-green-100 rounded-full p-0.5"
+                {/* Chapter Selection Options (Loaded from PDF) */}
+                {chapters.length > 0 && (
+                  <div className="mb-4 pt-4 border-t border-slate-200">
+                    <p className="text-right text-xs font-bold text-slate-400 mb-2 font-urdu">کتاب کے ابواب:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {chapters.map(chapter => (
+                        <button
+                          key={chapter}
+                          type="button"
+                          onClick={() => handleChapterChange(chapter)}
+                          className={cn(
+                            "px-4 py-1.5 rounded-xl text-xs font-urdu transition-all border",
+                            selectedChapters.includes(chapter)
+                              ? "bg-green-600 border-green-600 text-white shadow-md"
+                              : "bg-white border-slate-200 text-slate-600 hover:border-green-300 hover:bg-blue-50"
+                          )}
                         >
-                          <X className="w-3 h-3" />
+                          {chapter}
                         </button>
-                      )}
-                    </span>
-                  ))}
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Selected Chapters Tags */}
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-200">
+                  <p className="w-full text-right text-xs font-bold text-slate-400 mb-2 font-urdu">منتخب شدہ اسباق:</p>
+                  <AnimatePresence>
+                    {selectedChapters.map(chapter => (
+                      <motion.span 
+                        layout
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        key={chapter} 
+                        className={cn(
+                          "group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-urdu border shadow-[0_2px_8px_-3px_rgba(0,0,0,0.1)] transition-all hover:shadow-md",
+                          chapter === 'مکمل کتاب' 
+                            ? "bg-blue-600 border-blue-500 text-white" 
+                            : "bg-white border-green-200 text-green-800 hover:border-green-400"
+                        )}
+                      >
+                        {chapter}
+                        {chapter !== 'مکمل کتاب' && (
+                          <button 
+                            type="button" 
+                            onClick={() => removeChapter(chapter)}
+                            className="bg-green-100 group-hover:bg-green-200 text-green-800 rounded-full p-1 transition-colors"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        )}
+                        {chapter === 'مکمل کتاب' && (
+                          <div className="w-2 h-2 rounded-full bg-blue-300 animate-pulse" />
+                        )}
+                      </motion.span>
+                    ))}
+                  </AnimatePresence>
                   {selectedChapters.length === 0 && (
                     <span className="text-slate-400 text-sm font-urdu">کوئی باب منتخب نہیں کیا گیا۔</span>
                   )}
@@ -512,22 +595,25 @@ export const PaperGenerator: React.FC = () => {
         </form>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-row-reverse no-print">
-          <div className="flex items-center gap-3 flex-row-reverse">
-            <div className="w-10 h-10 bg-alfalah-primary/10 rounded-xl flex items-center justify-center text-alfalah-primary">
-              <FileText className="w-6 h-6" />
+      <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-xl flex flex-col overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center bg-slate-50/50 flex-row-reverse no-print gap-6">
+          <div className="flex items-center gap-4 flex-row-reverse">
+            <div className="w-12 h-12 bg-alfalah-primary/10 rounded-2xl flex items-center justify-center text-alfalah-primary shadow-inner">
+              <FileText className="w-7 h-7" />
             </div>
-            <span className="font-black text-xl text-slate-900 font-urdu">پیپر کا پیش نظارہ</span>
+            <div>
+              <h2 className="font-black text-2xl text-slate-900 font-urdu leading-tight">پیپر کا پیش نظارہ</h2>
+              <p className="text-slate-400 text-sm font-medium">تیار کردہ پیپر یہاں دیکھیں</p>
+            </div>
           </div>
           {generatedContent && (
-            <div className="flex gap-3 no-print download-buttons">
+            <div className="flex flex-wrap gap-3 no-print download-buttons w-full sm:w-auto">
               <button 
                 onClick={downloadWord}
-                className="flex-1 p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 font-bold" 
+                className="flex-1 sm:flex-none px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 font-bold group" 
                 title="Download Word"
               >
-                <FileDown className="w-6 h-6" />
+                <FileDown className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 <span className="font-urdu">ڈاؤن لوڈ Word</span>
               </button>
               <button 
@@ -535,17 +621,17 @@ export const PaperGenerator: React.FC = () => {
                   window.focus();
                   window.print();
                 }}
-                className="flex-1 p-4 bg-green-700 hover:bg-green-800 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 font-bold" 
+                className="flex-1 sm:flex-none px-6 py-4 bg-green-700 hover:bg-green-800 text-white rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3 font-bold group" 
                 title="Print Directly"
               >
-                <Printer className="w-6 h-6" />
+                <Printer className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 <span className="font-urdu">براہِ راست پرنٹ</span>
               </button>
             </div>
           )}
         </div>
 
-        <div className="flex-1 overflow-auto p-4 md:p-10 bg-slate-100/50">
+        <div className="flex-1 overflow-auto p-4 md:p-12 bg-slate-100/50 min-h-[600px] flex justify-center">
           <AnimatePresence mode="wait">
             {generatedContent ? (
               <motion.div
@@ -559,9 +645,14 @@ export const PaperGenerator: React.FC = () => {
                   id="paper-content" 
                   ref={paperRef} 
                   className={cn(
-                    "professional-paper p-8",
+                    "professional-paper p-12",
                     isUrduLanguage ? "text-right" : "text-left"
                   )}
+                  style={{ 
+                    fontFamily: 'Jameel Noori Nastaleeq, Urdu Typesetting, serif',
+                    backgroundColor: 'white',
+                    color: 'black'
+                  }}
                   dir={isUrduLanguage ? "rtl" : "ltr"}
                 >
                   {/* Watermark */}

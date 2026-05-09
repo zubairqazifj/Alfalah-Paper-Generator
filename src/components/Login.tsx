@@ -10,7 +10,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
-import { GraduationCap, LogIn, Mail, Lock, User, ArrowRight, CheckCircle2, KeyRound } from 'lucide-react';
+import { GraduationCap, LogIn, Mail, Lock, User, ArrowRight, CheckCircle2, KeyRound, Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,7 @@ export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -207,13 +208,20 @@ export const Login: React.FC = () => {
               >
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pl-14"
+                  className="input-field pl-14 pr-12"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-alfalah-primary transition-colors focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
