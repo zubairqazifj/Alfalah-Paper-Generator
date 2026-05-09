@@ -1,5 +1,6 @@
 {
-  "name": "Alfalah AI Paper Generator",
+  "name": "Alfalah Paper Generator",
   "description": "Professional academic examination designer for Matric and Intermediate levels with bilingual support and curriculum alignment.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": []
 }
